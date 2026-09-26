@@ -1,5 +1,7 @@
 # OpenSearch Thai Best Practices 🇹🇭
 
+[![Plugin Release](https://img.shields.io/github/v/release/kamthorn/opensearch-analysis-thaibreak?label=opensearch-plugin&color=blue)](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases)
+
 คู่มือและคลังตัวอย่างมาตรฐานการประมวลผลและสืบค้นภาษาไทยบน **OpenSearch** ระดับ Production ครอบคลุมครบทั้ง 4 เสาหลัก:
 1. **Text Normalization:** การชำระอักขรวิธี, สระซ้ำ, สระลอย, สระหน้า, Zero-width
 2. **Curated Stopwords & Synonyms:** การคัดกรองคำหยุดอย่างถูกต้อง ไม่ทำลายคำสำคัญ (Over-filtering) และคำพ้องคำทับศัพท์
@@ -59,6 +61,8 @@
 | **ความเสถียรข้าม JVM** | คงที่ | ❌ ต่างตามเวอร์ชัน Java | ✅ สม่ำเสมอ | ✅ 100% Deterministic |
 | **User Dictionary** | ❌ | ❌ (รอ upstream Lucene) | ⚠️ ต้อง compile `.dict` | ✅ โหลดผ่าน Plaintext TSV ได้ทันที |
 | **การป้องกันพยางค์แตก** | ❌ | ❌ | ⚠️ บางคำ | ✅ ควบคุมด้วย TCC Rules |
+| **Compound Word Modes** | ❌ | ❌ | ❌ | ✅ NONE / DISCARD / MIXED (Graph Token) |
+| **Token Filters พิเศษ** | ❌ | ❌ | ❌ | ✅ Tone, Soundex, Keyboard, Number |
 
 ---
 
@@ -93,6 +97,26 @@ opensearch-thai-best-practices/
 ### ข้อกำหนดระบบ
 - Docker และ Docker Compose
 - `curl` และ `python3` (สำหรับรันชุดทดสอบ)
+
+### ติดตั้ง Plugin (ถ้าใช้ `thaibreak` tokenizer)
+
+Plugin พร้อมใช้งาน — ดาวน์โหลด Pre-built ZIP ได้ทันที:
+
+```bash
+# OpenSearch 2.18.0
+bin/opensearch-plugin install \
+  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.0.0/analysis-thaibreak-2.18.0.0.zip
+
+# OpenSearch 2.19.0  
+bin/opensearch-plugin install \
+  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.0.0/analysis-thaibreak-2.19.0.0.zip
+
+# OpenSearch 3.8.0
+bin/opensearch-plugin install \
+  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.0.0/analysis-thaibreak-3.8.0.0.zip
+```
+
+รองรับ: `2.11.1` | `2.15.0` | `2.17.1` | `2.18.0` | `2.19.0` | `3.8.0` — [ดู Release ทั้งหมด](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.0.0)
 
 ### ขั้นตอนการรัน
 
@@ -243,7 +267,17 @@ Hybrid Results:
 
 ---
 
-## 7. สิทธิ์การใช้งาน (License)
+## 7. โปรเจกต์ที่เกี่ยวข้อง
+
+| โปรเจกต์ | คำอธิบาย | ลิงก์ |
+|---|---|---|
+| **opensearch-analysis-thaibreak** | OpenSearch Plugin ตัดคำภาษาไทย พร้อม Filters ครบชุด | [GitHub](https://github.com/kamthorn/opensearch-analysis-thaibreak) · [v1.0.0](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.0.0) |
+| **thai-break** | Multi-language Thai Segmenter (PHP/Go/Rust/TypeScript/Python) | [GitHub](https://github.com/kamthorn/thai-break) |
+| **Apache Lucene PRs** | PR #16717, #16718, #16720, #16722 — Thai Analysis เข้า Lucene Core | [#16717](https://github.com/apache/lucene/pull/16717) · [#16718](https://github.com/apache/lucene/pull/16718) · [#16720](https://github.com/apache/lucene/pull/16720) · [#16722](https://github.com/apache/lucene/pull/16722) |
+
+---
+
+## 8. สิทธิ์การใช้งาน (License)
 
 Apache License 2.0 — ดูรายละเอียดที่ [LICENSE.txt](LICENSE.txt)
 สามารถนำไปประยุกต์ใช้ในระบบเชิงพาณิชย์และโปรเจกต์ภายในองค์กรได้อย่างอิสระ

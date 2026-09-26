@@ -1,0 +1,28 @@
+{
+  "description": "คำสั่งสืบค้นแบบ Hybrid Search (Lexical Match + k-NN Dense Vector) ร่วมกับ Search Pipeline",
+  "query": {
+    "hybrid": {
+      "queries": [
+        {
+          "match": {
+            "content": {
+              "query": "การวิเคราะห์ข้อมูลบนคลาวด์",
+              "boost": 0.4
+            }
+          }
+        },
+        {
+          "knn": {
+            "content_vector": {
+              "vector": [0.25, 0.55, 0.12, 0.88],
+              "k": 10,
+              "boost": 0.6
+            }
+          }
+        }
+      ]
+    }
+  },
+  "size": 5,
+  "_source": ["id", "title", "content"]
+}

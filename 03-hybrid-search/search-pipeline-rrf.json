@@ -1,0 +1,18 @@
+{
+  "description": "OpenSearch Search Pipeline using Reciprocal Rank Fusion (RRF) for Thai Hybrid Search",
+  "phase_results_processors": [
+    {
+      "normalization-processor": {
+        "normalization": {
+          "technique": "rrf"
+        },
+        "combination": {
+          "technique": "rrf",
+          "parameters": {
+            "weights": [0.4, 0.6]
+          }
+        }
+      }
+    }
+  ]
+}

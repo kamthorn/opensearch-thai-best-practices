@@ -1,0 +1,44 @@
+{
+  "description": "คำสั่งเปรียบเทียบการเรียงลำดับ: Default Keyword Sort vs Thai Collation Sort",
+  "test_dataset": [
+    "กบ",
+    "เกาะ",
+    "ไก่",
+    "ขวด",
+    "ฮูก"
+  ],
+  "expected_results": {
+    "flawed_default_keyword_sort": {
+      "note": "ผิด! สระหน้า (เ, ไ) ถูกจัดไว้หลังสุดเพราะรหัส Unicode สูงกว่า ฮ",
+      "order": [
+        "กบ",
+        "ขวด",
+        "ฮูก",
+        "เกาะ",
+        "ไก่"
+      ]
+    },
+    "correct_thai_collation_sort": {
+      "note": "ถูกต้องตามพจนานุกรมราชบัณฑิตยสถาน! เกาะ และ ไก่ ถูกเรียงตามพยัญชนะต้น 'ก'",
+      "order": [
+        "กบ",
+        "เกาะ",
+        "ไก่",
+        "ขวด",
+        "ฮูก"
+      ]
+    }
+  },
+  "query_flawed_sort": {
+    "query": { "match_all": {} },
+    "sort": [
+      { "name.raw_sort": { "order": "asc" } }
+    ]
+  },
+  "query_correct_thai_sort": {
+    "query": { "match_all": {} },
+    "sort": [
+      { "name.thai_sort": { "order": "asc" } }
+    ]
+  }
+}

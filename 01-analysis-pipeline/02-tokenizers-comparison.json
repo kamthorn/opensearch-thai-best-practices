@@ -1,0 +1,46 @@
+{
+  "description": "การเปรียบเทียบ Tokenizer แต่ละประเภทสำหรับการประมวลผลภาษาไทยใน OpenSearch",
+  "comparison_matrix": {
+    "standard": {
+      "name": "Standard Tokenizer",
+      "supports_thai": "❌ ไม่รองรับ",
+      "algorithm": "Unicode Text Segmentation (UAX #29) โดยตัดด้วย whitespace/punctuation",
+      "thai_behavior": "มองข้อความภาษาไทยทั้งประโยคเป็น token เดียว ไม่ตัดคำ",
+      "user_dictionary": "❌ ไม่รองรับ",
+      "portability": "คงที่ทุกระบบ"
+    },
+    "thai": {
+      "name": "Built-in Thai Tokenizer",
+      "supports_thai": "⚠️ รองรับขั้นพื้นฐาน",
+      "algorithm": "java.text.BreakIterator (พึ่งพา JRE Dictionary)",
+      "thai_behavior": "ตัดคำตามพจนานุกรมใน JDK แต่ขาดความต่อเนื่อง ไม่รองรับคำสมัยใหม่",
+      "user_dictionary": "❌ ไม่รองรับใน OpenSearch มาตรฐาน (ต้องรอ Lucene version ถัดไปที่เรา contribute)",
+      "portability": "❌ เสี่ยงสูง ผลลัพธ์อาจต่างกันข้ามเวอร์ชัน Java (11 vs 17 vs 21)"
+    },
+    "icu_tokenizer": {
+      "name": "ICU Tokenizer (analysis-icu)",
+      "supports_thai": "✅ รองรับดีมาก",
+      "algorithm": "ICU4J RuleBasedBreakIterator พร้อม Thai dictionary ในตัว",
+      "thai_behavior": "ตัดคำได้สม่ำเสมอและแม่นยำกว่า BreakIterator ของ JDK",
+      "user_dictionary": "⚠️ ต้อง compile binary dictionary (.dict) ใหม่",
+      "portability": "✅ สม่ำเสมอตามเวอร์ชัน ICU library"
+    },
+    "thaibreak": {
+      "name": "ThaiBreak Tokenizer (opensearch-analysis-thaibreak)",
+      "supports_thai": "🌟 แนะนำสำหรับงานขั้นสูง",
+      "algorithm": "Viterbi Shortest Path DAG + Thai Character Cluster (TCC) 30 Rules",
+      "thai_behavior": "ตัดคำแบบคำนวณค่าน้ำหนักความถี่ ป้องกันการตัดกลางพยางค์ คำประสมไม่แตก",
+      "user_dictionary": "✅ รองรับ User Dictionary แบบ plain text / TSV สดๆ ผ่าน mapping settings",
+      "portability": "✅ 100% Deterministic ทุกระบบ เพราะพจนานุกรมและ engine ฝังในตัว"
+    }
+  },
+  "sample_evaluations": [
+    {
+      "text": "คนขับรถพารากอนไปกินข้าว",
+      "standard": ["คนขับรถพารากอนไปกินข้าว"],
+      "thai_breakiterator": ["คน", "ขับ", "รถ", "พารา", "กอน", "ไป", "กิน", "ข้าว"],
+      "icu_tokenizer": ["คน", "ขับ", "รถ", "พารากอน", "ไป", "กิน", "ข้าว"],
+      "thaibreak_with_userdict": ["คนขับรถ", "พารากอน", "ไป", "กินข้าว"]
+    }
+  ]
+}

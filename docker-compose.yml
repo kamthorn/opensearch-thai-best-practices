@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.19.0
+    container_name: opensearch-thai-dev
+    environment:
+      - cluster.name=opensearch-thai-cluster
+      - node.name=opensearch-node-1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "plugins.security.disabled=true"
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=ThaiBestPractices2026!"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+      - ./01-analysis-pipeline/03-curated-stopwords.txt:/usr/share/opensearch/config/analysis/thai-stopwords.txt:ro
+      - ./01-analysis-pipeline/04-synonyms.txt:/usr/share/opensearch/config/analysis/thai-synonyms.txt:ro
+    command: >
+      bash -c "
+        if ! ./bin/opensearch-plugin list | grep -q analysis-icu; then
+          echo 'Installing analysis-icu plugin...'
+          ./bin/opensearch-plugin install -b analysis-icu
+        fi
+        ./opensearch-docker-entrypoint.sh opensearch
+      "
+    networks:
+      - opensearch-net
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.0
+    container_name: opensearch-dashboards-dev
+    ports:
+      - "5601:5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    networks:
+      - opensearch-net
+    depends_on:
+      - opensearch
+
+volumes:
+  opensearch-data:
+
+networks:
+  opensearch-net:

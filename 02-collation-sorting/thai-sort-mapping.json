@@ -1,0 +1,44 @@
+{
+  "description": "การตั้งค่า Collation Sorting สำหรับภาษาไทยตามหลักพจนานุกรมฉบับราชบัณฑิตยสถาน",
+  "explanation": {
+    "problem": "ในรหัส Unicode/UTF-8 สระหน้า (เ=U+0E40, แ=U+0E41, โ=U+0E42, ใ=U+0E43, ไ=U+0E44) มีค่ารหัสสูงกว่าพยัญชนะตัวสุดท้ายคือ 'ฮ' (U+0E2E)\nทำให้การจัดเรียงแบบไบต์ปกติ (Standard Keyword Sort) นำคำที่ขึ้นต้นด้วยสระหน้า เช่น 'เกาะ', 'ไข่', 'ไก่' ไปอยู่หลัง 'ฮูก' ทั้งหมด ซึ่งผิดหลักพจนานุกรมไทยอย่างสิ้นเชิง",
+    "solution": "ใช้ฟิลด์ชนิด icu_collation_keyword จากปลั๊กอิน analysis-icu โดยระบุ language: 'th' และ country: 'TH'\nICU Collation Algorithm จะทำ Vowel Reordering โดยนำสระหน้าไปพิจารณาตามหลังพยัญชนะต้นโดยอัตโนมัติ ทำให้ได้ลำดับ ก-ฮ ที่ถูกต้อง 100%"
+  },
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "thai_simple": {
+            "type": "custom",
+            "tokenizer": "icu_tokenizer",
+            "filter": ["icu_folding", "decimal_digit"]
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text",
+        "analyzer": "thai_simple",
+        "fields": {
+          "raw_sort": {
+            "type": "keyword",
+            "doc_values": true
+          },
+          "thai_sort": {
+            "type": "icu_collation_keyword",
+            "index": false,
+            "language": "th",
+            "country": "TH",
+            "variant": "@collation=standard"
+          }
+        }
+      },
+      "category": {
+        "type": "keyword"
+      }
+    }
+  }
+}

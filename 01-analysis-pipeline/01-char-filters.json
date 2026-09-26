@@ -1,0 +1,63 @@
+{
+  "description": "ตัวอย่างการตั้งค่า Character Filters สำหรับชำระข้อมูลภาษาไทย (Normalization) ก่อนส่งเข้า Tokenizer",
+  "settings": {
+    "analysis": {
+      "char_filter": {
+        "thai_double_sara_e": {
+          "type": "pattern_replace",
+          "pattern": "\\u0E40\\u0E40",
+          "replacement": "\\u0E41"
+        },
+        "thai_sara_am": {
+          "type": "pattern_replace",
+          "pattern": "\\u0E4D([\\u0E48-\\u0E4B])?\\u0E32",
+          "replacement": "$1\\u0E33"
+        },
+        "thai_duplicate_diacritics": {
+          "type": "pattern_replace",
+          "pattern": "([\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E])\\1+",
+          "replacement": "$1"
+        },
+        "thai_zero_width": {
+          "type": "pattern_replace",
+          "pattern": "[\\u200B\\u200C\\u200D\\uFEFF]",
+          "replacement": ""
+        }
+      },
+      "analyzer": {
+        "thai_normalized_preview": {
+          "type": "custom",
+          "char_filter": [
+            "thai_zero_width",
+            "thai_double_sara_e",
+            "thai_sara_am",
+            "thai_duplicate_diacritics"
+          ],
+          "tokenizer": "standard"
+        }
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "comment": "1. แก้สระเอ 2 ตัวเป็นสระแอ (เ + เ -> แ)",
+      "input": "เเมว",
+      "expected_normalized": "แมว"
+    },
+    {
+      "comment": "2. แก้สระอำที่พิมพ์แยก นิคหิต + วรรณยุกต์ + สระอา (น + ํ + ้ + า -> น้ำ)",
+      "input": "นํ้า",
+      "expected_normalized": "น้ำ"
+    },
+    {
+      "comment": "3. แก้สระและวรรณยุกต์ซ้ำซ้อน (ดี + ี -> ดี, ไม้ + ้ -> ไม้)",
+      "input": "ดีีใจจังเลยไม้้เอก",
+      "expected_normalized": "ดีใจจังเลยไม้เอก"
+    },
+    {
+      "comment": "4. กำจัด Zero-Width Space (U+200B) ที่ติดมาจากเว็บ",
+      "input": "สวัสดี​ครับ",
+      "expected_normalized": "สวัสดีครับ"
+    }
+  ]
+}

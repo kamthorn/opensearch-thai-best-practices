@@ -1,0 +1,95 @@
+{
+  "description": "Production-Ready Thai Analyzer Configuration for OpenSearch",
+  "settings": {
+    "index": {
+      "analysis": {
+        "char_filter": {
+          "thai_zero_width": {
+            "type": "pattern_replace",
+            "pattern": "[\\u200B\\u200C\\u200D\\uFEFF]",
+            "replacement": ""
+          },
+          "thai_double_sara_e": {
+            "type": "pattern_replace",
+            "pattern": "\\u0E40\\u0E40",
+            "replacement": "\\u0E41"
+          },
+          "thai_sara_am": {
+            "type": "pattern_replace",
+            "pattern": "\\u0E4D([\\u0E48-\\u0E4B])?\\u0E32",
+            "replacement": "$1\\u0E33"
+          },
+          "thai_duplicate_diacritics": {
+            "type": "pattern_replace",
+            "pattern": "([\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E])\\1+",
+            "replacement": "$1"
+          }
+        },
+        "filter": {
+          "thai_curated_stopwords": {
+            "type": "stop",
+            "stopwords_path": "analysis/thai-stopwords.txt"
+          },
+          "thai_synonyms_index": {
+            "type": "synonym_graph",
+            "synonyms_path": "analysis/thai-synonyms.txt",
+            "lenient": true
+          }
+        },
+        "analyzer": {
+          "thai_index": {
+            "type": "custom",
+            "char_filter": [
+              "thai_zero_width",
+              "thai_double_sara_e",
+              "thai_sara_am",
+              "thai_duplicate_diacritics"
+            ],
+            "tokenizer": "icu_tokenizer",
+            "filter": [
+              "icu_folding",
+              "decimal_digit",
+              "thai_curated_stopwords",
+              "thai_synonyms_index"
+            ]
+          },
+          "thai_search": {
+            "type": "custom",
+            "char_filter": [
+              "thai_zero_width",
+              "thai_double_sara_e",
+              "thai_sara_am",
+              "thai_duplicate_diacritics"
+            ],
+            "tokenizer": "icu_tokenizer",
+            "filter": [
+              "icu_folding",
+              "decimal_digit",
+              "thai_curated_stopwords"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "thai_index",
+        "search_analyzer": "thai_search",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "thai_index",
+        "search_analyzer": "thai_search"
+      }
+    }
+  }
+}

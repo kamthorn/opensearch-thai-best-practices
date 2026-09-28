@@ -98,9 +98,17 @@ opensearch-thai-best-practices/
 - Docker และ Docker Compose
 - `curl` และ `python3` (สำหรับรันชุดทดสอบ)
 
-### ติดตั้ง Plugin (ถ้าใช้ `thaibreak` tokenizer)
+### ทางเลือกที่ 1: รันผ่าน Pre-built Docker Image (ไม่ต้องติดตั้งอะไรเพิ่ม)
 
-Plugin พร้อมใช้งาน — ดาวน์โหลด Pre-built ZIP ได้ทันที:
+```bash
+docker run -d -p 9200:9200 -p 9600:9600 \
+  -e "discovery.type=single-node" \
+  -e "plugins.security.disabled=true" \
+  --name opensearch-thaibreak \
+  ghcr.io/kamthorn/opensearch-thaibreak:2.18.0
+```
+
+### ทางเลือกที่ 2: ติดตั้ง Plugin ใน OpenSearch เดิม
 
 ```bash
 # OpenSearch 2.18.0
@@ -119,7 +127,6 @@ bin/opensearch-plugin install \
 รองรับ: `2.11.1` | `2.15.0` | `2.17.1` | `2.18.0` | `2.19.0` | `3.8.0` — [ดู Release ทั้งหมด](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.0.0)
 
 ### ขั้นตอนการรัน
-
 1. **เปิด OpenSearch คลัสเตอร์:**
    ```bash
    docker-compose up -d
@@ -273,7 +280,7 @@ Hybrid Results:
 |---|---|---|
 | **opensearch-analysis-thaibreak** | OpenSearch Plugin ตัดคำภาษาไทย พร้อม Filters ครบชุด | [GitHub](https://github.com/kamthorn/opensearch-analysis-thaibreak) · [v1.0.0](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.0.0) |
 | **thai-break** | Multi-language Thai Segmenter (PHP/Go/Rust/TypeScript/Python) | [GitHub](https://github.com/kamthorn/thai-break) |
-| **Apache Lucene PRs** | PR #16717, #16718, #16720, #16722 — Thai Analysis เข้า Lucene Core | [#16717](https://github.com/apache/lucene/pull/16717) · [#16718](https://github.com/apache/lucene/pull/16718) · [#16720](https://github.com/apache/lucene/pull/16720) · [#16722](https://github.com/apache/lucene/pull/16722) |
+| **Apache Lucene Upstream** | PR #16717, #16718, #16720 (🟣 Merged), #16722 (🟢 Open) — Thai Analysis เข้า Lucene Core | [#16717](https://github.com/apache/lucene/pull/16717) · [#16718](https://github.com/apache/lucene/pull/16718) · [#16720](https://github.com/apache/lucene/pull/16720) · [#16722](https://github.com/apache/lucene/pull/16722) |
 
 ---
 

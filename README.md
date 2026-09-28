@@ -278,9 +278,9 @@ Hybrid Results:
 
 | โปรเจกต์ | คำอธิบาย | ลิงก์ |
 |---|---|---|
-| **opensearch-analysis-thaibreak** | OpenSearch Plugin ตัดคำภาษาไทย พร้อม Filters ครบชุด | [GitHub](https://github.com/kamthorn/opensearch-analysis-thaibreak) · [v1.0.0](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.0.0) |
+| **opensearch-analysis-thaibreak** | OpenSearch Plugin ตัดคำภาษาไทย พร้อม Filters ครบชุด | [GitHub](https://github.com/kamthorn/opensearch-analysis-thaibreak) · [v1.1.0](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.1.0) |
 | **thai-break** | Multi-language Thai Segmenter (PHP/Go/Rust/TypeScript/Python) | [GitHub](https://github.com/kamthorn/thai-break) |
-| **Apache Lucene Upstream** | PR #16717, #16718, #16720 (🟣 Merged), #16722 (🟢 Open) — Thai Analysis เข้า Lucene Core | [#16717](https://github.com/apache/lucene/pull/16717) · [#16718](https://github.com/apache/lucene/pull/16718) · [#16720](https://github.com/apache/lucene/pull/16720) · [#16722](https://github.com/apache/lucene/pull/16722) |
+| **Apache Lucene Upstream** | PR #16717, #16718, #16720, #16722 (🟣 Merged เข้า Lucene Core ครบทั้งหมด) | [#16717](https://github.com/apache/lucene/pull/16717) · [#16718](https://github.com/apache/lucene/pull/16718) · [#16720](https://github.com/apache/lucene/pull/16720) · [#16722](https://github.com/apache/lucene/pull/16722) |
 
 ---
 

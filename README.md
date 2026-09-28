@@ -281,6 +281,7 @@ Hybrid Results:
 | **opensearch-analysis-thaibreak** | OpenSearch Plugin ตัดคำภาษาไทย พร้อม Filters ครบชุด | [GitHub](https://github.com/kamthorn/opensearch-analysis-thaibreak) · [v1.1.0](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.1.0) |
 | **thai-break** | Multi-language Thai Segmenter (PHP/Go/Rust/TypeScript/Python) | [GitHub](https://github.com/kamthorn/thai-break) |
 | **Apache Lucene Upstream** | PR #16717, #16718, #16720, #16722, #16727 (🟣 All 5 Merged!) | [#16717](https://github.com/apache/lucene/pull/16717) · [#16718](https://github.com/apache/lucene/pull/16718) · [#16720](https://github.com/apache/lucene/pull/16720) · [#16722](https://github.com/apache/lucene/pull/16722) · [#16727](https://github.com/apache/lucene/pull/16727) |
+| **OpenSearch Core Upstream** | RFC Issue #23151 — Modernize Thai Language Analysis in OpenSearch Core | [#23151](https://github.com/opensearch-project/OpenSearch/issues/23151) |
 
 ---
 

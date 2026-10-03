@@ -12,12 +12,12 @@
           "thai_double_sara_e": {
             "type": "pattern_replace",
             "pattern": "\\u0E40\\u0E40",
-            "replacement": "\\u0E41"
+            "replacement": "\u0E41"
           },
           "thai_sara_am": {
             "type": "pattern_replace",
             "pattern": "\\u0E4D([\\u0E48-\\u0E4B])?\\u0E32",
-            "replacement": "$1\\u0E33"
+            "replacement": "$1\u0E33"
           },
           "thai_duplicate_diacritics": {
             "type": "pattern_replace",
@@ -47,10 +47,10 @@
             ],
             "tokenizer": "icu_tokenizer",
             "filter": [
-              "icu_folding",
               "decimal_digit",
               "thai_curated_stopwords",
-              "thai_synonyms_index"
+              "thai_synonyms_index",
+              "icu_folding"
             ]
           },
           "thai_search": {
@@ -63,9 +63,9 @@
             ],
             "tokenizer": "icu_tokenizer",
             "filter": [
-              "icu_folding",
               "decimal_digit",
-              "thai_curated_stopwords"
+              "thai_curated_stopwords",
+              "icu_folding"
             ]
           }
         }

@@ -46,12 +46,12 @@ INDEX_CONFIG=$(cat << 'EOF'
           "thai_double_sara_e": {
             "type": "pattern_replace",
             "pattern": "\\u0E40\\u0E40",
-            "replacement": "\\u0E41"
+            "replacement": "\u0E41"
           },
           "thai_sara_am": {
             "type": "pattern_replace",
             "pattern": "\\u0E4D([\\u0E48-\\u0E4B])?\\u0E32",
-            "replacement": "$1\\u0E33"
+            "replacement": "$1\u0E33"
           },
           "thai_duplicate_diacritics": {
             "type": "pattern_replace",
@@ -81,10 +81,10 @@ INDEX_CONFIG=$(cat << 'EOF'
             ],
             "tokenizer": "icu_tokenizer",
             "filter": [
-              "icu_folding",
               "decimal_digit",
               "thai_curated_stopwords",
-              "thai_synonyms"
+              "thai_synonyms",
+              "icu_folding"
             ]
           },
           "thai_search": {
@@ -97,9 +97,9 @@ INDEX_CONFIG=$(cat << 'EOF'
             ],
             "tokenizer": "icu_tokenizer",
             "filter": [
-              "icu_folding",
               "decimal_digit",
-              "thai_curated_stopwords"
+              "thai_curated_stopwords",
+              "icu_folding"
             ]
           }
         }
@@ -118,7 +118,6 @@ INDEX_CONFIG=$(cat << 'EOF'
           "raw_sort": { "type": "keyword" },
           "thai_sort": {
             "type": "icu_collation_keyword",
-            "index": false,
             "language": "th",
             "country": "TH"
           }
@@ -130,7 +129,7 @@ INDEX_CONFIG=$(cat << 'EOF'
         "method": {
           "name": "hnsw",
           "space_type": "cosinesimil",
-          "engine": "nmslib"
+          "engine": "lucene"
         }
       }
     }
@@ -165,6 +164,21 @@ curl -s "${OPENSEARCH_URL}/${INDEX_NAME}/_search" \
      -H "Content-Type: application/json" \
      -d '{"query":{"match":{"title":"ผลไม้"}}}' | \
      python3 -c "import sys,json; r=json.load(sys.stdin); print('Hits:', r['hits']['total']['value'], [h['_source']['title'] for h in r['hits']['hits']])"
+
+echo -e "\n${BLUE}=== 6b. Test Case 2b: Stopwords That Carry Tone Marks Are Removed ===${NC}"
+echo "Analyzing 'ฉันกินข้าวที่ร้านแต่ไม่อร่อย' (ที่ and แต่ are stopwords; icu_folding must run AFTER the stop filter):"
+curl -s "${OPENSEARCH_URL}/${INDEX_NAME}/_analyze" \
+     -H "Content-Type: application/json" \
+     -d '{"analyzer":"thai_index","text":"ฉันกินข้าวที่ร้านแต่ไม่อร่อย"}' | \
+     python3 -c "
+import sys, json
+tokens = [t['token'] for t in json.load(sys.stdin)['tokens']]
+print('Tokens:', tokens)
+left = [w for w in ('ที่', 'ที', 'แต่', 'แต') if w in tokens]
+if left:
+    sys.exit('FAIL: stopwords not removed: %s (is icu_folding placed before the stop filter?)' % left)
+print('PASS: tone-marked stopwords removed')
+"
 
 echo -e "\n${BLUE}=== 7. Test Case 3: Thai Collation Sorting Comparison ===${NC}"
 echo -e "${YELLOW}[Flawed Default Byte Sort] (สระนำหน้า เ, ไ ไปอยู่หลังสุด):${NC}"

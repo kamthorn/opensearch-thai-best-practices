@@ -1,5 +1,4 @@
 {
-  "description": "คำสั่งสืบค้นแบบ Hybrid Search (Lexical Match + k-NN Dense Vector) ร่วมกับ Search Pipeline",
   "query": {
     "hybrid": {
       "queries": [

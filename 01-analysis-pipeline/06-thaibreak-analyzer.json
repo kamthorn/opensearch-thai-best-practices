@@ -1,0 +1,127 @@
+{
+  "description": "Thai analyzer ที่ใช้ plugin analysis-thaibreak (v1.4.0+): ตัดคำด้วย Viterbi+TCC, ชำระอักขรวิธีด้วย thaibreak_normalization, ตัด stopwords, และมีฟิลด์ย่อยที่ทนต่อวรรณยุกต์ผิด ส่งเฉพาะ settings และ mappings ให้ PUT /<index>",
+  "notes": [
+    "analyzer แบบ custom ไม่ได้ normalize ให้เอง ต้องใส่ thai_tb_normalization ไว้ต้น chain ทุกตัว (analyzer สำเร็จรูป thaibreak และ thaibreak_person ใส่ให้อัตโนมัติ)",
+    "thai_curated_stopwords ต้องอยู่ก่อน thai_tb_tone เพราะ stop เทียบตัวอักษรตรงๆ และไฟล์ stopwords มีวรรณยุกต์",
+    "ฟิลด์หลักไม่ตัดวรรณยุกต์ (ข้าว ≠ ขาว) ส่วน .loose ตัดวรรณยุกต์ ใช้เป็นตาข่ายสำรองน้ำหนักต่ำ",
+    "เปลี่ยน analyzer บน index เดิมแล้วต้อง reindex"
+  ],
+  "settings": {
+    "index": {
+      "analysis": {
+        "tokenizer": {
+          "thai_tb_words": {
+            "type": "thaibreak",
+            "decompound_mode": "none"
+          },
+          "thai_tb_mixed": {
+            "type": "thaibreak",
+            "decompound_mode": "mixed"
+          }
+        },
+        "filter": {
+          "thai_tb_normalization": {
+            "type": "thaibreak_normalization"
+          },
+          "thai_tb_tone": {
+            "type": "thaibreak_tone",
+            "keep_original": false
+          },
+          "thai_tb_collation": {
+            "type": "thaibreak_collation",
+            "strength": "tertiary"
+          },
+          "thai_curated_stopwords": {
+            "type": "stop",
+            "stopwords_path": "analysis/thai-stopwords.txt"
+          }
+        },
+        "analyzer": {
+          "thai_tb": {
+            "type": "custom",
+            "tokenizer": "thai_tb_words",
+            "filter": [
+              "thai_tb_normalization",
+              "lowercase",
+              "decimal_digit",
+              "thai_curated_stopwords"
+            ]
+          },
+          "thai_tb_sub": {
+            "type": "custom",
+            "tokenizer": "thai_tb_mixed",
+            "filter": [
+              "thai_tb_normalization",
+              "lowercase",
+              "decimal_digit",
+              "thai_curated_stopwords"
+            ]
+          },
+          "thai_tb_loose": {
+            "type": "custom",
+            "tokenizer": "thai_tb_words",
+            "filter": [
+              "thai_tb_normalization",
+              "lowercase",
+              "decimal_digit",
+              "thai_curated_stopwords",
+              "thai_tb_tone"
+            ]
+          }
+        },
+        "normalizer": {
+          "thai_tb_sort": {
+            "type": "custom",
+            "filter": [
+              "thai_tb_normalization",
+              "thai_tb_collation"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "thai_tb",
+        "fields": {
+          "sub": {
+            "type": "text",
+            "analyzer": "thai_tb_sub",
+            "search_analyzer": "thai_tb"
+          },
+          "loose": {
+            "type": "text",
+            "analyzer": "thai_tb_loose"
+          }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "thai_tb",
+        "fields": {
+          "sub": {
+            "type": "text",
+            "analyzer": "thai_tb_sub",
+            "search_analyzer": "thai_tb"
+          },
+          "loose": {
+            "type": "text",
+            "analyzer": "thai_tb_loose"
+          }
+        }
+      },
+      "name": {
+        "type": "keyword",
+        "fields": {
+          "sort": {
+            "type": "keyword",
+            "normalizer": "thai_tb_sort"
+          }
+        }
+      }
+    }
+  }
+}

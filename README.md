@@ -21,6 +21,8 @@
   - [5.2 การจัดชุดคำหยุด (Curated Stopwords)](#52-การจัดชุดคำหยุด-curated-stopwords)
   - [5.3 การจัดเรียงตามพจนานุกรมไทย (Collation Sorting)](#53-การจัดเรียงตามพจนานุกรมไทย-collation-sorting)
   - [5.4 การค้นหาแบบลูกผสม (Thai Hybrid Search)](#54-การค้นหาแบบลูกผสม-thai-hybrid-search)
+  - [5.5 Pipeline แบบ thaibreak](#55-pipeline-แบบ-thaibreak)
+  - [5.6 การค้นหาที่ทนต่อการสะกดผิด (Typo Tolerance)](#56-การค้นหาที่ทนต่อการสะกดผิด-typo-tolerance)
 - [6. ผลการทดสอบ (Verification & Test Results)](#6-ผลการทดสอบ-verification--test-results)
 - [7. โปรเจกต์ที่เกี่ยวข้อง](#7-โปรเจกต์ที่เกี่ยวข้อง)
 - [8. สิทธิ์การใช้งาน (License)](#8-สิทธิ์การใช้งาน-license)
@@ -63,7 +65,7 @@
 | **User Dictionary** | ❌ | ❌ (รอ upstream Lucene) | ⚠️ ต้อง compile `.dict` | ✅ โหลดผ่าน Plaintext TSV ได้ทันที |
 | **การป้องกันพยางค์แตก** | ❌ | ❌ | ⚠️ บางคำ | ✅ ควบคุมด้วย TCC Rules |
 | **Compound Word Modes** | ❌ | ❌ | ❌ | ✅ NONE / DISCARD / MIXED (Graph Token) |
-| **Token Filters พิเศษ** | ❌ | ❌ | ❌ | ✅ Tone, Soundex, Keyboard, Number |
+| **Token Filters พิเศษ** | ❌ | ❌ | ❌ | ✅ Normalization, Tone, Soundex, Keyboard, Number, Acronym, Romanization, Collation |
 
 ---
 
@@ -77,7 +79,8 @@ opensearch-thai-best-practices/
 │   ├── 02-tokenizers-comparison.json      # การเปรียบเทียบเชิงลึกของแต่ละ Tokenizer
 │   ├── 03-curated-stopwords.txt           # รายการ Stopwords ภาษาไทยฉบับปรับปรุง
 │   ├── 04-synonyms.txt                    # คำพ้อง/คำทับศัพท์สำหรับระบบค้นหา
-│   └── 05-full-thai-analyzer.json         # Full Production Analyzer Configuration
+│   ├── 05-full-thai-analyzer.json         # Full Production Analyzer Configuration (analysis-icu)
+│   └── 06-thaibreak-analyzer.json         # Analyzer แบบ analysis-thaibreak + ฟิลด์ย่อย + normalizer สำหรับ sort
 ├── 02-collation-sorting/
 │   ├── thai-sort-mapping.json             # การตั้งค่า icu_collation_keyword
 │   └── test-sort-query.json               # คำสั่ง Query เปรียบเทียบผลลัพธ์การเรียง
@@ -88,7 +91,9 @@ opensearch-thai-best-practices/
 │   └── hybrid-search-query.json           # ตัวอย่าง Hybrid Search Query
 └── sample-data/
     ├── bulk-products.json                 # ข้อมูลตัวอย่างสินค้าภาษาไทย
-    └── test-queries.sh                    # สคริปต์รันทดสอบอัตโนมัติครบทุกฟีเจอร์
+    ├── bulk-thaibreak.json                # ข้อมูล 14 เอกสารสำหรับทดสอบ pipeline แบบ thaibreak
+    ├── test-queries.sh                    # สคริปต์ทดสอบส่วน 01–03 (ใช้เฉพาะ analysis-icu)
+    └── test-thaibreak.sh                  # สคริปต์ทดสอบส่วน 5.5–5.6 (ต้องมี analysis-thaibreak)
 ```
 
 > ไฟล์ `.json` ในโฟลเดอร์ `01`–`03` มีคีย์อธิบาย (`description`, `explanation`, `test_cases`) ที่ OpenSearch ไม่รู้จัก ส่งไฟล์ตรงๆ ให้ `PUT /<index>` ไม่ได้ ให้ส่งเฉพาะ `settings` และ `mappings` เช่น `jq '{settings, mappings}' 01-analysis-pipeline/05-full-thai-analyzer.json` ส่วน `test-queries.sh` สร้าง index ด้วยชุดค่าเดียวกันให้แล้ว
@@ -128,7 +133,7 @@ bin/opensearch-plugin install \
 
 รองรับ: `2.15.0` | `2.17.1` | `2.18.0` | `2.19.0` | `3.8.0` | `3.9.0` — ZIP ติดตั้งได้เฉพาะ OpenSearch รุ่นที่ระบุในชื่อไฟล์ ([ดู Release ทั้งหมด](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.4.0)) ส่วน `2.11.x`–`2.13.x` ใช้ไม่ได้เพราะ plugin ต้องการ Java 21
 
-ตัวอย่างใน repo นี้ (ส่วน 01–03) ใช้ `icu_tokenizer` และ `icu_collation_keyword` จึงต้องมี **`analysis-icu`** (`bin/opensearch-plugin install analysis-icu`) ส่วน `analysis-thaibreak` ไม่จำเป็น ขั้นตอน `docker-compose up -d` ด้านล่างติดตั้ง `analysis-icu` ให้อัตโนมัติ ทดสอบแล้วบน OpenSearch 2.19.0 และ 3.9.0
+ตัวอย่างใน repo นี้ (ส่วน 01–03) ใช้ `icu_tokenizer` และ `icu_collation_keyword` จึงต้องมี **`analysis-icu`** (`bin/opensearch-plugin install analysis-icu`) ส่วน `analysis-thaibreak` ไม่จำเป็น ขั้นตอน `docker-compose up -d` ด้านล่างติดตั้งทั้ง `analysis-icu` และ `analysis-thaibreak` (OpenSearch 2.19.0 ตัวแปร `THAIBREAK_ZIP_URL` เปลี่ยนเวอร์ชันได้) ทดสอบแล้วบน OpenSearch 2.19.0 และ 3.9.0
 
 ### ขั้นตอนการรัน
 1. **เปิด OpenSearch คลัสเตอร์:**
@@ -138,7 +143,8 @@ bin/opensearch-plugin install \
 
 2. **รันการทดสอบและสร้าง Index สาธิต:**
    ```bash
-   ./sample-data/test-queries.sh
+   ./sample-data/test-queries.sh      # ส่วน 01–03 (analysis-icu)
+   ./sample-data/test-thaibreak.sh    # ส่วน 5.5–5.6 (analysis-thaibreak)
    ```
 
 3. **เข้าใช้งาน OpenSearch Dashboards:**
@@ -218,6 +224,8 @@ bin/opensearch-plugin install \
 อัลกอริทึม ICU จะทำ Vowel Reordering นำพยัญชนะต้นขึ้นมาพิจารณาก่อนสระหน้าเสมอ ได้ผลลัพธ์ที่ถูกต้องตามพจนานุกรม:
 `กบ` ➔ `เกาะ` ➔ `ไก่` ➔ `ขวด` ➔ `ฮูก`
 
+**ทางเลือกโดยไม่ใช้ ICU:** plugin `analysis-thaibreak` มี filter `thaibreak_collation` ใช้ใน `normalizer` ของฟิลด์ `keyword` ได้ ผลเรียงตรงกับ ICU (วรรณยุกต์เป็นคีย์ระดับรอง จึง `กลอง` มาก่อน `กล้อง`) แต่ไม่ต้องติดตั้ง `analysis-icu` ดูตัวอย่างใน [06-thaibreak-analyzer.json](01-analysis-pipeline/06-thaibreak-analyzer.json) (`name.sort`) และผลทดสอบใน [5.5](#55-pipeline-แบบ-thaibreak)
+
 ### 5.4 การค้นหาแบบลูกผสม (Thai Hybrid Search)
 
 การค้นหาภาษาไทยที่มีประสิทธิภาพสูงสุดในยุคปัจจุบัน คือการผสานข้อดีของ 2 โลก:
@@ -257,6 +265,61 @@ $$\text{RRF Score} = \sum_{m \in M} \frac{1}{k + r_m(d)}$$
 
 โดย `k` คือ `rank_constant` (ค่าเริ่มต้น 60) และ `r_m(d)` คืออันดับของเอกสาร `d` ในผลของ query ที่ `m` pipeline ใช้ `score-ranker-processor` ซึ่งมีให้ตั้งแต่ OpenSearch 2.19 (`normalization-processor` ไม่รองรับ `rrf` ใน 3.9.0) RRF ใช้เฉพาะอันดับ ค่า `boost` ใน query จึงไม่มีผลต่อคะแนนรวม ถ้าต้องการถ่วงน้ำหนักระหว่าง BM25 กับ k-NN ให้ใช้ pipeline แบบ min-max ([search-pipeline-minmax.json](03-hybrid-search/search-pipeline-minmax.json)) ตัวอย่าง mapping ใช้ k-NN engine `lucene` เพราะ `nmslib` สร้าง index ใหม่ไม่ได้ตั้งแต่ OpenSearch 3.0
 
+### 5.5 Pipeline แบบ thaibreak
+
+[06-thaibreak-analyzer.json](01-analysis-pipeline/06-thaibreak-analyzer.json) ใช้ tokenizer `thaibreak` (ตัดคำด้วยพจนานุกรมและ TCC) แทน `icu_tokenizer` และไม่ใช้ `icu_folding` ฟิลด์หลักจึงยังแยกคำที่ต่างกันด้วยวรรณยุกต์ (`ข้าว` ≠ `ขาว`, `กลอง` ≠ `กล้อง`):
+
+| ฟิลด์ | analyzer | ใช้ทำอะไร |
+|---|---|---|
+| `title` | `thai_tb` = `thaibreak` + `thaibreak_normalization` + `lowercase` + `decimal_digit` + stopwords | ค้นหาหลัก แม่นยำ |
+| `title.sub` | `thai_tb_sub` (decompound `mixed`, ค้นด้วย `thai_tb`) | ค้นส่วนย่อยของคำประสม (`สนามบิน` → `สนาม`, `บิน`) |
+| `title.loose` | `thai_tb_loose` = `thai_tb` + `thaibreak_tone` | ตาข่ายสำรองสำหรับวรรณยุกต์ผิดหรือหาย |
+| `name.sort` | `keyword` + normalizer (`thaibreak_normalization` + `thaibreak_collation`) | เรียงตามพจนานุกรม |
+
+```json
+"analyzer": {
+  "thai_tb": {
+    "type": "custom",
+    "tokenizer": "thai_tb_words",
+    "filter": ["thai_tb_normalization", "lowercase", "decimal_digit", "thai_curated_stopwords"]
+  }
+}
+```
+
+ข้อควรระวัง:
+- **analyzer แบบ `custom` ต้องใส่ `thaibreak_normalization` เอง** ไว้ต้น chain ทุกตัว (รวม analyzer ของฟิลด์ย่อย) analyzer สำเร็จรูป `thaibreak` และ `thaibreak_person` ใส่ให้อัตโนมัติตั้งแต่ v1.4.0 ถ้าลืม เอกสารที่พิมพ์ `นํ้าตาล` จะค้นด้วย `น้ำตาล` ไม่เจอ ทั้งที่ตัดคำถูก เพราะ token ยังเป็นรูปเดิมของเอกสาร
+- ลำดับ filter: `thaibreak_normalization` มาก่อน `stop` และ `stop` มาก่อน `thaibreak_tone` (เหตุผลเดียวกับ `icu_folding` ใน [5.2](#52-การจัดชุดคำหยุด-curated-stopwords))
+- เปลี่ยน analyzer บน index เดิมแล้วต้อง **reindex**
+
+`./sample-data/test-thaibreak.sh` ตรวจพฤติกรรมเหล่านี้กับข้อมูล 14 เอกสาร: `น้ำตาล`, `นำ้ตาล` และ `นํ้าตาล` ค้นเจอเอกสารเดียวกัน, `แมว` เจอเอกสารที่เก็บเป็น `เเมว`, stopwords ที่มีวรรณยุกต์ถูกตัด, `ข้าว` ไม่ชน `ขาว` บนฟิลด์หลัก (ฟิลด์ `.loose` ชน ตามที่ออกแบบ) และ `thaibreak_collation` เรียง `ไก่ทอด` ไว้ใกล้ `ก` แทนที่จะอยู่ท้ายสุด
+
+### 5.6 การค้นหาที่ทนต่อการสะกดผิด (Typo Tolerance)
+
+OpenSearch มี `fuzziness` ในตัว (ระยะ Levenshtein นับเป็นตัวอักษร สลับตำแหน่งสองตัวติดกันนับเป็น 1) แต่ภาษาไทยได้ผลจำกัด:
+- **`AUTO` ให้ระยะน้อย:** 0 สำหรับคำ 1–2 ตัวอักษร, 1 สำหรับ 3–5 ตัว, 2 สำหรับ 6 ตัวขึ้นไป คำไทยหลังตัดคำมักสั้น และวรรณยุกต์กับสระนับเป็นตัวอักษรเต็ม
+- **การสะกดผิดเปลี่ยนการตัดคำ:** fuzzy ทำกับ term หลังตัดคำ แต่คำที่พิมพ์ผิดมักถูกตัดเป็นคำอื่น เช่น `สนามบิล` → `สนาม|บิล`, `จักยานยนต์` → `จัก|ยาน|ยนต์`, `คอมพิวเตอ` → `คอม|พิวเตอ` ไม่มี term ในฟิลด์หลักที่อยู่ห่างหนึ่งตัวอักษรให้จับคู่
+
+ผลจาก `test-thaibreak.sh` (ข้อมูล 14 เอกสาร ใช้เป็นตัวอย่างประกอบ ไม่ใช่ benchmark; ✓ = เจอเอกสารที่ตั้งใจ, ตัวเลข = จำนวนเอกสารอื่นที่ติดมาด้วย):
+
+| คำที่พิมพ์ผิด | exact | fuzzy AUTO | fuzzy 1 | `.loose` | `.sub` | layered |
+|---|---|---|---|---|---|---|
+| `ขาวหอม` (วรรณยุกต์หาย) | ✓ +1 | ✓ +1 | ✓ +1 | ✓ +1 | ✓ +2 | ✓ +2 |
+| `ไก้ทอด` (วรรณยุกต์ผิด) | ✓ +0 | ✓ +1 | ✓ +1 | ✓ +0 | ✓ +0 | ✓ +0 |
+| `คอมพิวเตอ` (การันต์หาย) | ✗ | ✗ +1 | ✗ | ✗ | ✗ | ✗ |
+| `สนามบิล` (พยัญชนะท้ายผิด) | ✗ | ✗ | ✗ | ✗ | ✓ +0 | ✓ +0 |
+| `จักยานยนต์` (ตกหนึ่งตัวอักษร) | ✗ | ✗ | ✗ | ✗ | ✓ +0 | ✓ +0 |
+| `มือถอ` (สระ/ตัวอักษรผิด) | ✗ | ✗ | ✗ | ✗ | ✓ +1 | ✓ +1 |
+| **เจอที่ตั้งใจ** | 2/6 | 2/6 | 2/6 | 2/6 | 5/6 | 5/6 |
+
+`layered` = `title` (×3) + `title.loose` (×1) + `title.sub` (×0.5) ในหนึ่ง `bool.should` สิ่งที่ได้ผลคือ `.sub` เพราะมันเก็บส่วนย่อยของคำประสมด้วย การพิมพ์ผิดที่ยังเหลือส่วนย่อยที่ถูก (`สนาม`, `ยนต์`, `มือ`) จึงยังค้นเจอ ส่วน `fuzziness` ไม่เพิ่ม recall ในชุดนี้และดึงเอกสารที่ไม่เกี่ยวมาด้วย (`+1`)
+
+แนวปฏิบัติ:
+1. จัดการสะกดต่างรูปแต่หน้าตาเหมือนกันด้วย **normalization** (`นํ้า`, `นำ้`, `เเ`) ไม่ใช่ fuzzy
+2. ใช้ฟิลด์ย่อยแยกหน้าที่: `.loose` สำหรับวรรณยุกต์ และ `.sub` สำหรับส่วนย่อยของคำประสม ให้น้ำหนักต่ำกว่าฟิลด์หลักเสมอ เพื่อให้ผลที่ตรงเป๊ะขึ้นก่อน
+3. ถ้าจะใช้ `fuzziness` ให้ตั้ง `prefix_length: 1` และ `max_expansions` ให้ต่ำ เพราะขยายหลาย term ช้ากว่า match ปกติ และใช้กับคำที่ยาวพอ
+4. ชื่อบุคคลที่ออกเสียงเหมือนกันแต่สะกดต่าง (`ณัฐพล` / `นัฐพล`) ใช้ `thaibreak_soundex` ซึ่ง Levenshtein จับไม่ได้ (ดู README ของ plugin)
+5. ถ้าต้องการให้ทนต่อการพิมพ์ผิดแบบกว้างจริงๆ ทางเลือกคือ n-gram (index ใหญ่ขึ้น) ในการทดลองแยกบนข้อมูลชุดเดียวกัน (ฟิลด์ย่อย n-gram 2–3 ตัวอักษร `minimum_should_match: 60%`, ไม่ได้รวมอยู่ในไฟล์ตัวอย่าง) เจอเอกสารที่ตั้งใจครบ 6/6 แต่มีเอกสารอื่นติดมามากกว่า (สูงสุด +6) ต้องวัดกับข้อมูลจริงก่อนนำไปใช้
+
 ---
 
 ## 6. ผลการทดสอบ (Verification & Test Results)
@@ -291,6 +354,34 @@ Hybrid Results:
  - Score: 0.015625 | Title: น้ำผลไม้แท้ 100% รสส้มเขียวหวาน
  - Score: 0.015384615 | Title: บริการคนขับรถผู้บริหารมืออาชีพ
 ```
+
+และเมื่อรัน `./sample-data/test-thaibreak.sh` (ต้องมี `analysis-thaibreak`):
+
+```text
+=== Test A: spelling variants index to the same term ===
+PASS: น้ำตาล finds the document stored as นํ้าตาล  ['1']
+PASS: นำ้ตาล (tone after ำ) finds it too  ['1']
+PASS: นํ้าตาล (legacy) finds น้ำตาล documents  ['1']
+PASS: แมว finds the document stored as เเมว (double Sara E)  ['6']
+
+=== Test B: stopwords with tone marks are removed ===
+Tokens: ['บริการ', 'ส่ง', 'อาหาร', 'ถึง', 'ราคา', 'ถูก']
+PASS: ที่, แต่, ซึ่ง removed
+
+=== Test C: tone marks keep words apart on the main field, .loose is the safety net ===
+PASS: ข้าว finds only the rice document  ['3']
+PASS: กลอง and กล้อง are different terms  ['11'] / ['10']
+PASS: title.loose: ขาวหอม (tone dropped) finds the rice document with AND  ['3']
+PASS: title: ขาวหอม with AND finds nothing
+
+=== Test D: thaibreak_collation normalizer sorts in dictionary order ===
+Byte order  : ['กลอง', 'กล้อง', 'ข้าวหอม', 'ครีมผิวขาว', 'คลาวด์', 'คอมพิวเตอร์', 'จักรยานยนต์', 'น้ำตาล', 'น้ำผลไม้', 'มือถือ', 'สนามบิน', 'ส่งอาหาร', 'อาหารแมว', 'ไก่ทอด']
+Thai order  : ['กลอง', 'กล้อง', 'ไก่ทอด', 'ข้าวหอม', 'ครีมผิวขาว', 'คลาวด์', 'คอมพิวเตอร์', 'จักรยานยนต์', 'น้ำตาล', 'น้ำผลไม้', 'มือถือ', 'ส่งอาหาร', 'สนามบิน', 'อาหารแมว']
+PASS: ไก่ทอด (leading vowel) is last in byte order but not in Thai order
+PASS: กลอง sorts before กล้อง (tone mark is a second-level key)
+```
+
+(Test E คือตารางใน [5.6](#56-การค้นหาที่ทนต่อการสะกดผิด-typo-tolerance)) ผลเหมือนกันบน OpenSearch 2.19.0 (plugin 2.19.0.0) และ 3.9.0 (plugin 3.9.0.0)
 
 ---
 

@@ -10,6 +10,8 @@ services:
       - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
       - "plugins.security.disabled=true"
       - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=ThaiBestPractices2026!"
+      # plugin ZIP ต้องตรงกับเวอร์ชัน OpenSearch ของ image (2.19.0)
+      - "THAIBREAK_ZIP_URL=${THAIBREAK_ZIP_URL:-https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.4.0/analysis-thaibreak-2.19.0.0.zip}"
     ulimits:
       memlock:
         soft: -1
@@ -29,6 +31,10 @@ services:
         if ! ./bin/opensearch-plugin list | grep -q analysis-icu; then
           echo 'Installing analysis-icu plugin...'
           ./bin/opensearch-plugin install -b analysis-icu
+        fi
+        if ! ./bin/opensearch-plugin list | grep -q analysis-thaibreak; then
+          echo 'Installing analysis-thaibreak plugin...'
+          ./bin/opensearch-plugin install -b $$THAIBREAK_ZIP_URL
         fi
         ./opensearch-docker-entrypoint.sh opensearch
       "

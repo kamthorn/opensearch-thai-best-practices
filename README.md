@@ -53,7 +53,7 @@
     (UAX#29 พื้นฐาน)             (analysis-icu)        (opensearch-analysis-thaibreak)
              │                          │                          │
    ไม่ตัดคำภาษาไทย              RuleBasedBreakIterator         Viterbi DAG + TCC 30 Rules
-(ออกเป็นทั้งประโยค)              ความเสถียรข้ามแพลตฟอร์มสูง        พจนานุกรม 51,347 คำในตัว (v1.4.0)
+(ออกเป็นทั้งประโยค)              ความเสถียรข้ามแพลตฟอร์มสูง        พจนานุกรม 41,272 คำในตัว (v1.5.1)
                                                            รองรับ User Dict แบบ Plaintext
 ```
 
@@ -124,11 +124,11 @@ image มีให้สำหรับ `2.18.0`, `2.19.0`, `3.8.0` และ `3
 ```bash
 # OpenSearch 3.9.0
 bin/opensearch-plugin install \
-  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.4.0/analysis-thaibreak-3.9.0.0.zip
+  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.5.1/analysis-thaibreak-3.9.0.0.zip
 
 # OpenSearch 2.19.0
 bin/opensearch-plugin install \
-  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.4.0/analysis-thaibreak-2.19.0.0.zip
+  https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.5.1/analysis-thaibreak-2.19.0.0.zip
 ```
 
 รองรับ: `2.15.0` | `2.17.1` | `2.18.0` | `2.19.0` | `3.8.0` | `3.9.0` — ZIP ติดตั้งได้เฉพาะ OpenSearch รุ่นที่ระบุในชื่อไฟล์ ([ดู Release ทั้งหมด](https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/tag/v1.4.0)) ส่วน `2.11.x`–`2.13.x` ใช้ไม่ได้เพราะ plugin ต้องการ Java 21

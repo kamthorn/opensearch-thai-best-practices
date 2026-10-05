@@ -11,7 +11,7 @@ services:
       - "plugins.security.disabled=true"
       - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=ThaiBestPractices2026!"
       # plugin ZIP ต้องตรงกับเวอร์ชัน OpenSearch ของ image (2.19.0)
-      - "THAIBREAK_ZIP_URL=${THAIBREAK_ZIP_URL:-https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.4.0/analysis-thaibreak-2.19.0.0.zip}"
+      - "THAIBREAK_ZIP_URL=${THAIBREAK_ZIP_URL:-https://github.com/kamthorn/opensearch-analysis-thaibreak/releases/download/v1.5.1/analysis-thaibreak-2.19.0.0.zip}"
     ulimits:
       memlock:
         soft: -1
